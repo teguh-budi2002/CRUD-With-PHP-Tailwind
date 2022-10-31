@@ -1,0 +1,133 @@
+<?php
+require 'connection.php';
+
+$old_product = $name_product = $price = $date = "";
+$name_product_err = $price_err = $date_err = '';
+$id = $_GET['id'];
+
+try {
+    $query = "SELECT * FROM products where id='$id'";
+    $old_product = mysqli_query($isConnecting, $query);
+} catch (\Throwable $th) {
+    echo "ERROR: " . $th->getMessage();
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    //Validation Name Product Input
+    if (empty(trim($_POST['name']))) {
+        $name_product_err = 'Name Product Must Be Filled In';
+    } else {
+        $name_product = trim($_POST['name']);
+    }
+
+    //Validation Price Input
+    if (empty(trim($_POST['price']))) {
+        $price_err = 'Price Must Be Included';
+    } else {
+        $price = trim($_POST['price']);
+    }
+
+    //Validation Date Input
+    if (empty(trim($_POST['date']))) {
+        $date_err = 'The Product Date Must Be Included';
+    } else {
+        $date = trim($_POST['date']);
+    }
+    if (empty($name_product_err) && empty($price_err) && empty($date_err)) {
+        $sql = "UPDATE products SET name=?, price=?, date=? WHERE id = '$id'";
+        if ($statement = mysqli_prepare($isConnecting, $sql)) {
+            $binding = mysqli_stmt_bind_param($statement, 'ssd', $name_product, $price,$date);
+            if (mysqli_stmt_execute($statement)) {
+                header("location: index.php?updated-product");
+            }
+            mysqli_stmt_close($statement);
+        }
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Product</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100">
+    <div class="w-full h-full">
+        <div class="wrapper  mt-28">
+            <div class="txt_header text-center mb-3">
+                <p class="font-semibold text-gray-600 text-4xl">Edit Your Product</p>
+            </div>
+            <div class="w-full flex justify-center">
+                <div class="form_wrapper w-3/4 p-2 bg-white shadow-md shadow-gray-400 rounded-md">
+                    <?php
+                        while ($old = mysqli_fetch_array($old_product)) {
+                    ?>
+                    <form action="<?php echo htmlspecialchars($_SERVER["REQUEST_URI"]);?>" method="POST">
+                        <div class="mb-6">
+                            <label for="name"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Your
+                                product name?</label>
+                            <input type="text" id="name" name="name" value="<?php echo $old['name']; ?>"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="Cheetos? Or Something">
+                            <?php
+                            if (!empty($name_product_err)) {
+                            ?>
+                            <div class="w-full text-center bg-red-300 p-2 mt-3 rounded-md">
+                                <span class="text-sm text-red-600"><?php echo $name_product_err; ?></span>
+                            </div>
+                            <?php
+                            }
+                            ?>
+                        </div>
+                        <div class="mb-6">
+                            <label for="price"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Price?</label>
+                            <input type="text" id="price" name="price" value="<?php echo $old['price']; ?>"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                            <?php
+                            if (!empty($price_err)) {
+                            ?>
+                            <div class="w-full text-center bg-red-300 p-2 mt-3 rounded-md">
+                                <span class="text-sm text-red-600"><?php echo $price_err; ?></span>
+                            </div>
+                            <?php
+                            }
+                            ?>
+                        </div>
+                        <div class="mb-6">
+                            <label for="date"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Date Created
+                                Product</label>
+                            <input type="date" id="date" name="date"
+                                value="<?php echo date('Y-m-d',strtotime($old["date"])) ?>"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                            <?php
+                            if (!empty($date_err)) {
+                            ?>
+                            <div class="w-full text-center bg-red-300 p-2 mt-3 rounded-md">
+                                <span class="text-sm text-red-600"><?php echo $date_err; ?></span>
+                            </div>
+                            <?php
+                            }
+                            ?>
+                        </div>
+                        <button type="submit"
+                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Edit Product</button>
+                    </form>
+                    <?php
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
